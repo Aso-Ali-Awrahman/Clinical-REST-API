@@ -26,27 +26,26 @@ class PatientData(models.Model):
     paid_amount = models.IntegerField()
     monthly_rent = models.IntegerField(blank=True, null=True)
     
+    visits = models.JSONField(default=list)
+    
     next_appointment_date = models.DateField(blank=True, null=True)
     next_appointment_time = models.TimeField(blank=True, null=True)
     
     def __str__(self):
         return self.name
     
+
+
+def upload_to_this_patient_folder(instance, filename):
+    return f"images/({instance.patient.id}) {instance.patient.name}/{filename}"
+    
     
 class PatientImages(models.Model):
     patient = models.ForeignKey(PatientData, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='images/', null=True, blank=True) 
+    image = models.ImageField(upload_to=upload_to_this_patient_folder, null=True, blank=True) 
     
     def __str__(self):
         return self.patient.name + "'s Image" 
 
-
-class PatientVisits(models.Model):
-    patient = models.ForeignKey(PatientData, on_delete=models.CASCADE, related_name='visits')
-    visited_date = models.DateField()
-    paid_amount = models.IntegerField(blank=True, null=True)
-    
-    def __str__(self):
-        return self.patient.name + "'s Visit"
     
     
