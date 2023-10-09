@@ -10,6 +10,7 @@ urlpatterns = [
     
     path('api/createPatient', views.createPatient),
     path('api/uploadImages/<int:id>', views.uploadImages),
+    path('api/exportData/<str:password>', views.exportData),
     
     path('api/updatePatient/<int:id>', views.updatePatientData),
     

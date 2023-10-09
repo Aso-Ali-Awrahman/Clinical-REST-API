@@ -3,6 +3,10 @@ from rest_framework.decorators import api_view, parser_classes
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser
 
+import pandas as pd
+import os
+import shutil
+from random import randint
 
 from .models import PatientData, PatientImages
 from .serializers import PatientSerializer, PatientImageSerializer
@@ -49,7 +53,6 @@ def createPatient(request):
         return Response(status=status.HTTP_400_BAD_REQUEST)
     
     
-
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
 def uploadImages(request, id): 
@@ -70,6 +73,35 @@ def uploadImages(request, id):
 
     return Response(status=status.HTTP_202_ACCEPTED)
 
+
+@api_view(['POST'])
+def exportData(request, password):
+    if password != "AdminBase":
+        return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+    
+    patients = PatientData.objects.all()
+    
+    try:
+        data_list = list(patients.values())  # make the data object to a list so that pd can read it
+        df = pd.DataFrame(data_list)  
+        
+        desktop_directory = os.path.join(os.path.expanduser("~"), f"Desktop/Clinic Data{randint(1, 1000)}")  # simply gets the user desktop directory
+        os.makedirs(desktop_directory, exist_ok=True)
+        
+        excel_file_path = os.path.join(desktop_directory, f"Patients Data.xlsx") # create the excel folder
+    
+        df.to_excel(excel_file_path, index=False)  # save the data in the excel
+        
+        # copy the media folder to the desktop
+        media_directory = "C:/Users/TOTAL TECH CO/Desktop/Visual code/RestFrame/media"
+        shutil.copytree(media_directory, os.path.join(desktop_directory, "Media"))
+        
+    except Exception as e:
+        return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+    
+    
+    return Response(status=status.HTTP_201_CREATED)
+    
 
 
 @api_view(['PUT'])
