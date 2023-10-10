@@ -3,6 +3,8 @@ from rest_framework.decorators import api_view, parser_classes
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser
 
+from django.conf import settings
+
 import pandas as pd
 import os
 import shutil
@@ -37,7 +39,7 @@ def getOnePatient(request, id):
 
     serializer = PatientSerializer(patient, many=False, context={'request': request})
     
-    return Response(serializer.data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 
@@ -93,12 +95,11 @@ def exportData(request, password):
         df.to_excel(excel_file_path, index=False)  # save the data in the excel
         
         # copy the media folder to the desktop
-        media_directory = "C:/Users/TOTAL TECH CO/Desktop/Visual code/RestFrame/media"
+        media_directory = settings.MEDIA_ROOT   
         shutil.copytree(media_directory, os.path.join(desktop_directory, "Media"))
         
     except Exception as e:
         return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
-    
     
     return Response(status=status.HTTP_201_CREATED)
     
@@ -107,13 +108,13 @@ def exportData(request, password):
 @api_view(['PUT'])
 def updatePatientData(request, id):
     try:
-        patient_old = PatientData.objects.get(pk=id)
+        patient_old_data = PatientData.objects.get(pk=id)
     except PatientData.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     patient_to_update = request.data
     
-    patient_serializer = PatientSerializer(patient_old, patient_to_update)
+    patient_serializer = PatientSerializer(patient_old_data, patient_to_update)
     
     if patient_serializer.is_valid():
         patient_serializer.save()
@@ -131,6 +132,12 @@ def deletePatientData(request, id):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     patient.delete()
+    
+    try:  # remove the image folder of this patient
+        folder_to_delete = os.path.join(settings.MEDIA_ROOT, f"images\({id})")
+        shutil.rmtree(folder_to_delete)
+    except Exception as e:
+        return Response(status=status.HTTP_404_NOT_FOUND)
     
     return Response(status=status.HTTP_204_NO_CONTENT)
 

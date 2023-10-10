@@ -37,7 +37,7 @@ class PatientData(models.Model):
 
 
 def upload_to_this_patient_folder(instance, filename):
-    return f"images/({instance.patient.id}) {instance.patient.name}/{filename}"
+    return f"images/({instance.patient.id})/{filename}"
     
     
 class PatientImages(models.Model):
